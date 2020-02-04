@@ -9,6 +9,11 @@
 
 #include <SPI.h>
 #include <RH_RF95.h>
+#include "BluetoothSerial.h"
+
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+#endif
 
 #define RFM95_CS  14    // "E"
 #define RFM95_RST 32   // "D"
@@ -21,6 +26,8 @@
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
+BluetoothSerial SerialBT;
+
 // Blinky on receipt
 #define LED 13
 
@@ -31,9 +38,10 @@ void setup()
   digitalWrite(RFM95_RST, HIGH);
 
   Serial.begin(115200);
-  while (!Serial) {
-    delay(1);
-  }
+  SerialBT.begin("ESP32test"); //Bluetooth device name
+//  while (!Serial) {
+//    delay(1);
+//  }
   delay(100);
 
   Serial.println("Feather LoRa RX Test!");
@@ -68,6 +76,12 @@ void setup()
 
 void loop()
 {
+  if (Serial.available()) {
+    SerialBT.write(Serial.read());
+  }
+  if (SerialBT.available()) {
+    Serial.write(SerialBT.read());
+  }
   if (rf95.available())
   {
     // Should be a message for us now
@@ -82,12 +96,18 @@ void loop()
       Serial.println((char*)buf);
        Serial.print("RSSI: ");
       Serial.println(rf95.lastRssi(), DEC);
+      
+      SerialBT.print("Got: ");
+      SerialBT.println((char*)buf);
+       SerialBT.print("RSSI: ");
+      SerialBT.println(rf95.lastRssi(), DEC);
 
       // Send a reply
       uint8_t data[] = "And hello back to you";
       rf95.send(data, sizeof(data));
       rf95.waitPacketSent();
       Serial.println("Sent a reply");
+      SerialBT.println("Sent a reply");
       digitalWrite(LED, LOW);
     }
     else
