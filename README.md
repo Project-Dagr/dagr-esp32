@@ -8,7 +8,7 @@ The idea behind this Project DAGR is to create a decentralized offline text base
 
 ## Hardware 
 
-![huzzah32](.\images\huzzah32.jpg)
+![huzzah32](images/huzzah32.jpg)
 
 - [Adafruit HUZZAH32](https://www.adafruit.com/product/3405) - $20
 - [Adafruit LoRa Radio FeatherWing](https://www.adafruit.com/product/3231) - $20
