@@ -63,7 +63,7 @@ bool RHGenericDriver::waitPacketSent(uint16_t timeout)
     {
         if (_mode != RHModeTx) // Any previous transmit finished?
            return true;
-	YIELD;
+	// YIELD;
     }
     return false;
 }
