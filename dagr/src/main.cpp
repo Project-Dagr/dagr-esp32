@@ -2,10 +2,7 @@
 
 #include <SPI.h>
 #include <RH_RF95.h>
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEScan.h>
-#include <BLEAdvertisedDevice.h>
+#include "BluetoothSerial.h"
 
 // #define SERVICE_UUID "28974a5b-26be-45e4-af01-d8b4375c98d7"
 // #define CHARACTERISTIC_UUID "cda5231e-969e-4d4a-be77-dbad3a518875"
@@ -22,19 +19,18 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 // Blinky on receipt
 #define LED 13
 
-int scanTime = 5; //In seconds
-BLEScan *pBLEScan;
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+#endif
 
-class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
-{
-  void onResult(BLEAdvertisedDevice advertisedDevice)
-  {
-    Serial.printf("Advertised Device: %s \n", advertisedDevice.toString().c_str());
-  }
-};
+BluetoothSerial SerialBT;
+uint64_t chipID;
 
 void setup()
 {
+  chipID = ESP.getEfuseMac();
+  String deviceName = "Dagr-";
+  deviceName += (uint16_t)(chipID>>32);
   pinMode(LED, OUTPUT);
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
@@ -75,44 +71,40 @@ void setup()
   // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then
   // you can set transmitter powers from 5 to 23 dBm:
   rf95.setTxPower(23, false);
+  
 
-  // Setting up Bluetooth server
-  BLEDevice::init("");
-  pBLEScan = BLEDevice::getScan(); //create new scan
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-  pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
-  pBLEScan->setInterval(100);
-  pBLEScan->setWindow(99); // less or equal setInterval value
+  SerialBT.begin(deviceName); //Bluetooth device name
 }
 
 int16_t packetnum = 0; // packet counter, we increment per xmission
 bool detectedTouch = false;
 void loop()
 {
-  if (!detectedTouch && touchRead(T0) <= 40)
-  {
-    digitalWrite(LED, HIGH);
-    detectedTouch = true;
-    Serial.println("Transmitting..."); // Send a message to rf95_server
-    char radiopacket[20] = "Hello World #      ";
-    itoa(packetnum++, radiopacket + 13, 10);
-    Serial.print("Sending ");
-    Serial.println(radiopacket);
-    radiopacket[19] = 0;
 
-    Serial.println("Sending...");
-    delay(10);
-    rf95.send((uint8_t *)radiopacket, 20);
+  // if (!detectedTouch && touchRead(T0) <= 40)
+  // {
+  //   digitalWrite(LED, HIGH);
+  //   detectedTouch = true;
+  //   Serial.println("Transmitting..."); // Send a message to rf95_server
+  //   char radiopacket[20] = "Hello World #      ";
+  //   itoa(packetnum++, radiopacket + 13, 10);
+  //   Serial.print("Sending ");
+  //   Serial.println(radiopacket);
+  //   radiopacket[19] = 0;
 
-    Serial.println("Waiting for packet to complete...");
-    delay(10);
-    rf95.waitPacketSent(1000);
-    digitalWrite(LED, LOW);
-  }
-  else if (touchRead(T0) > 40)
-  {
-    detectedTouch = false;
-  }
+  //   Serial.println("Sending...");
+  //   delay(10);
+  //   rf95.send((uint8_t *)radiopacket, 20);
+
+  //   Serial.println("Waiting for packet to complete...");
+  //   delay(10);
+  //   rf95.waitPacketSent(1000);
+  //   digitalWrite(LED, LOW);
+  // }
+  // else if (touchRead(T0) > 40)
+  // {
+  //   detectedTouch = false;
+  // }
   if (rf95.available())
   {
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
@@ -126,6 +118,10 @@ void loop()
         Serial.println((char *)buf);
         Serial.print("RSSI: ");
         Serial.println(rf95.lastRssi(), DEC);
+        // SerialBT.write((uint8_t) buf);
+        SerialBT.println((char *)buf);
+
+        // SerialBT.write((char *)buf);
       }
       else
       {
@@ -133,10 +129,41 @@ void loop()
       }
     }
   }
-  BLEScanResults foundDevices = pBLEScan->start(scanTime, false);
-  Serial.print("Devices found: ");
-  Serial.println(foundDevices.getCount());
-  Serial.println("Scan done!");
-  pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
-  delay(2000);
+  // if (Serial.available())
+  // {
+  //   SerialBT.write(Serial.read());
+  // }
+  if (SerialBT.available())
+  {
+    // Serial.write(SerialBT.read());
+    char x;
+    String radiopacket = "";
+    do
+    {
+      x = SerialBT.read();
+      radiopacket += x;
+
+    } while (x != '\\');
+    digitalWrite(LED, HIGH);
+    detectedTouch = true;
+    Serial.println("Transmitting..."); // Send a message to rf95_server
+    // char radiopacket[20] = "Hello World #      ";
+    // itoa(packetnum++, radiopacket + 13, 10);
+    Serial.print("Sending ");
+    Serial.println(radiopacket);
+    // radiopacket[19] = 0;
+
+    Serial.println("Sending...");
+    delay(10);
+    rf95.send((uint8_t *)radiopacket.c_str(), 20);
+    // const uint8_t datapacket = atoi(radiopacket.substring(1, 3).c_str());
+    // rf95.send((uint8_t *)datapacket, 20);
+
+    Serial.println("Waiting for packet to complete...");
+    delay(10);
+    rf95.waitPacketSent(1000);
+    SerialBT.flush();
+    digitalWrite(LED, LOW);
+  }
+  delay(20);
 }
