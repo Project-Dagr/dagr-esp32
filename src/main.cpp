@@ -1,5 +1,3 @@
-
-
 #include "config.h"
 #include "BLE.h"
 
@@ -20,6 +18,9 @@ void setup()
 {
     Serial.begin(115200);
     Serial.write(getDeviceName());
+
+    pinMode(LED_PIN, OUTPUT);
+    
     bluetooth->setup();
 }
 

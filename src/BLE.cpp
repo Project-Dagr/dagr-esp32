@@ -1,5 +1,7 @@
 #include "config.h"
 #include "BLE.h"
+#include "DagrQueues.h"
+
 
 
 int i = 0;
@@ -40,6 +42,16 @@ void BLE::setup()
     dagrAdvertising = pServer->getAdvertising();
     dagrAdvertising->start();                                                         
 }
+void printQueue(std::queue<std::string> q)
+{
+	//printing content of queue 
+	while (!q.empty()){
+		Serial.print(" ");
+		Serial.write(q.front().c_str());
+		q.pop();
+	}
+	Serial.write("\n");
+}
 
 void BLE::loop()
 {
@@ -47,8 +59,15 @@ void BLE::loop()
     testString << "Test " << i++;
     readCharacteristic->setValue(testString.str());
     readCharacteristic->indicate();
-    printf(writeCharacteristic->getValue().c_str());
-
+    Serial.printf(writeCharacteristic->getValue().c_str());
+    std::string last_recieved = "";
+    if(!DagrQueues::Instance()->sendQueue.empty())
+        last_recieved = DagrQueues::Instance()->sendQueue.back();
+    if(writeCharacteristic->getValue() != last_recieved){
+        DagrQueues::Instance()->sendQueue.push(writeCharacteristic->getValue());
+        // writeCharacteristic->setValue(0);
+    }
+    printQueue(DagrQueues::Instance()->sendQueue);
 }
 
 bool BLE::isDeviceConnected(){
