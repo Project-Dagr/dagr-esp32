@@ -1,5 +1,6 @@
 #include "config.h"
 #include "BLE.h"
+#include "LORA.h"
 
 const char *getDeviceName()
 {
@@ -13,6 +14,7 @@ const char *getDeviceName()
 }
 
 BLE *bluetooth = new BLE(getDeviceName());
+LORA *lora = new LORA();
 
 void setup()
 {
@@ -22,13 +24,15 @@ void setup()
     pinMode(LED_PIN, OUTPUT);
     
     bluetooth->setup();
+    lora->setup();
 }
 
 void loop()
 {
-    while (bluetooth->isDeviceConnected())
-    {
+    // while (bluetooth->isDeviceConnected())
+    // {
         bluetooth->loop();
+        lora->loop();
         delay(1000);
-    }
+    // }
 }

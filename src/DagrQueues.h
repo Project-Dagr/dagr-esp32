@@ -14,4 +14,5 @@ public:
     static DagrQueues *Instance();
     std::queue<std::string> sendQueue;
     std::queue<std::string> recieveQueue;
+    static void printQueue(std::queue<std::string> q);
 };

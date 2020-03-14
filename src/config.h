@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <queue>
+#include <string>
 
 #define RFM95_CS 14  // "E"
 #define RFM95_RST 32 // "D"
