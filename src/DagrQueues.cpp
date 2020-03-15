@@ -15,9 +15,9 @@ void DagrQueues::printQueue(std::queue<std::string> q)
     //printing content of queue
     while (!q.empty())
     {
-        Serial.print(" ");
+        // Serial.print(" ");
         Serial.write(q.front().c_str());
         q.pop();
     }
-    Serial.write("\n");
+    Serial.println("");
 }

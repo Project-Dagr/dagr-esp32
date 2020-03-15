@@ -31,8 +31,14 @@ void loop()
 {
     // while (bluetooth->isDeviceConnected())
     // {
+        if(bluetooth->isDeviceConnected()){
+            Serial.println("Device Connected");
+        }else{
+            Serial.println("Device disconnected");
+
+        }
         bluetooth->loop();
         lora->loop();
-        delay(1000);
+        // delay(1000);
     // }
 }
