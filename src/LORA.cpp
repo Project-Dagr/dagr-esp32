@@ -73,5 +73,5 @@ void LORA::loop()
     }
   }
   Serial.print("Recieve Queue: ");
-  DagrQueues::printQueue(DagrQueues::Instance()->recieveQueue);
+  // DagrQueues::printQueue(DagrQueues::Instance()->recieveQueue);
 }

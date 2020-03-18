@@ -1,6 +1,9 @@
 #include "config.h"
 #include "BLE.h"
 #include "DagrQueues.h"
+#include <pb_common.h>
+#include <pb_decode.h>
+#include <pb_encode.h>
 
 int i = 0;
 bool _BLEClientConnected = false;
@@ -49,27 +52,43 @@ void BLE::loop()
     // testString << "Test " << i++;
     // readCharacteristic->setValue(testString.str());
     // readCharacteristic->indicate();
-    std::string last_recieved = "";
+    ChatMessage last_recieved = ChatMessage();
     if (!DagrQueues::Instance()->sendQueue.empty())
     {
         last_recieved = DagrQueues::Instance()->sendQueue.back();
     }
-    if (writeCharacteristic->getValue() != last_recieved)
+
+    uint8_t *current = writeCharacteristic->getData();
+    pb_istream_t stream = pb_istream_from_buffer(current, sizeof(current));
+    ChatMessage current_message;
+    pb_decode(&stream, ChatMessage_fields, &current_message);
+
+    if (current_message != last_recieved)
     {
 
-        DagrQueues::Instance()->sendQueue.push(writeCharacteristic->getValue());
+        DagrQueues::Instance()->sendQueue.push(current_message);
         Serial.write("Added to Queue");
         writeCharacteristic->setValue("");
     }
-    if(!DagrQueues::Instance()->recieveQueue.empty()){
-        readCharacteristic->setValue(DagrQueues::Instance()->recieveQueue.front());
+    if (!DagrQueues::Instance()->recieveQueue.empty())
+    {
+
+        pb_byte_t output[ChatMessage_size];
+        pb_ostream_t ostream = pb_ostream_from_buffer(output, sizeof(output));
+
+        if (!pb_encode(&ostream, ChatMessage_fields, &DagrQueues::Instance()->recieveQueue.front()))
+        {
+            // NRF_LOG_ERROR("Unable to encode: %s", PB_GET_ERROR(&ostream));
+            return;
+        }
+
+        readCharacteristic->setValue(output, sizeof(output));
         readCharacteristic->indicate();
         DagrQueues::Instance()->recieveQueue.pop();
     }
 
-
     Serial.print("Send Queue: ");
-    DagrQueues::printQueue(DagrQueues::Instance()->sendQueue);
+    // DagrQueues::printQueue(DagrQueues::Instance()->sendQueue);
 }
 
 bool BLE::isDeviceConnected()

@@ -12,7 +12,7 @@ private:
 
 public:
     static DagrQueues *Instance();
-    std::queue<std::string> sendQueue;
-    std::queue<std::string> recieveQueue;
-    static void printQueue(std::queue<std::string> q);
+    std::queue<ChatMessage> sendQueue;
+    std::queue<ChatMessage> recieveQueue;
+    static void printQueue(std::queue<ChatMessage> q);
 };

@@ -68,3 +68,11 @@ The minimum Viable Product/proof of concept will be having the DAGRs be able to 
 
 1. install the radiohead library in the arduino libraries folder
 2. upload sketch to adafruit feather
+
+
+### Generating ProtoBuf
+
+```
+cd bin/nanopb/generator
+./protoc --nanopb_out=../../../lib/proto --proto_path=../../../proto ..\..\..\proto\dagr.proto
+```
