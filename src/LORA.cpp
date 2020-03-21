@@ -1,7 +1,14 @@
 #include "LORA.h"
 #include "DagrQueues.h"
+#include "DagrPBConstants.h"
+#include <pb_common.h>
+#include <pb_decode.h>
+#include <pb_encode.h>
 
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
+
+#define MAX_RHPACKETLEN 251
+static uint8_t radiobuf[MAX_RHPACKETLEN];
 
 LORA::LORA() {}
 
@@ -46,13 +53,15 @@ void LORA::loop()
 {
   if (DagrQueues::Instance()->sendQueue.size() > 0)
   {
-    std::string message = DagrQueues::Instance()->sendQueue.front();
-    message += '\0';
-    rf95.send((uint8_t *)message.c_str(), message.length());
+    size_t numbytes = pb_encode_to_bytes(radiobuf, sizeof(radiobuf), ChatMessage_fields, &DagrQueues::Instance()->sendQueue.front());
+
+    int res = rf95.send(radiobuf, numbytes);
+    assert(res);
     DagrQueues::Instance()->sendQueue.pop();
   }
   if (rf95.available())
   {
+    Serial.println("Message Available");
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
     if (rf95.waitAvailableTimeout(1000))
@@ -60,7 +69,16 @@ void LORA::loop()
       // Should be a reply message for us now
       if (rf95.recv(buf, &len))
       {
-        DagrQueues::Instance()->recieveQueue.push((char *)buf);
+
+        ChatMessage message_recieved;
+        if (!pb_decode_from_bytes(buf, len, ChatMessage_fields, &message_recieved))
+        {
+          Serial.println("Decode Failed");
+        }
+        else
+        {
+          DagrQueues::Instance()->recieveQueue.push(message_recieved);
+        }
         // Serial.print("Got Message: ");
         // Serial.println((char *)buf);
         // Serial.print("RSSI: ");
@@ -72,6 +90,6 @@ void LORA::loop()
       }
     }
   }
-  Serial.print("Recieve Queue: ");
+  // Serial.print("Recieve Queue: ");
   // DagrQueues::printQueue(DagrQueues::Instance()->recieveQueue);
 }

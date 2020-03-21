@@ -8,5 +8,7 @@ if(platform.system() == "Windows"):
     devices = json.loads(output)
     # print(devices[0]['port'])
     for device in devices:
-        upload_stream = os.popen(f"pio run --target upload --upload-port ${device['port']}")
+        print(device["port"])
+        port = device["port"]
+        os.system("pio run --target upload --upload-port "+ port)
 
