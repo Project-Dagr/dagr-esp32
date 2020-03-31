@@ -14,18 +14,18 @@ extern "C" {
 #endif
 
 /* Struct definitions */
+typedef struct _ChatMessage {
+    pb_callback_t from;
+    pb_callback_t to;
+    pb_callback_t message;
+} ChatMessage;
+
 typedef struct _User {
     pb_callback_t id;
     pb_callback_t long_name;
     pb_callback_t short_name;
     pb_callback_t macaddr;
 } User;
-
-typedef struct _ChatMessage {
-    int32_t from;
-    int32_t to;
-    pb_callback_t message;
-} ChatMessage;
 
 typedef PB_BYTES_ARRAY_T(255) DagrPacket_fragment_t;
 typedef struct _DagrPacket {
@@ -45,22 +45,22 @@ typedef struct _toDagr {
 
 /* Initializer values for message structs */
 #define toDagr_init_default                      {0, {ChatMessage_init_default}}
-#define ChatMessage_init_default                 {0, 0, {{NULL}, NULL}}
+#define ChatMessage_init_default                 {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
 #define DagrPacket_init_default                  {0, {0, {0}}, 0}
 #define User_init_default                        {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
 #define toDagr_init_zero                         {0, {ChatMessage_init_zero}}
-#define ChatMessage_init_zero                    {0, 0, {{NULL}, NULL}}
+#define ChatMessage_init_zero                    {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
 #define DagrPacket_init_zero                     {0, {0, {0}}, 0}
 #define User_init_zero                           {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
 
 /* Field tags (for use in manual encoding/decoding) */
+#define ChatMessage_from_tag                     1
+#define ChatMessage_to_tag                       2
+#define ChatMessage_message_tag                  3
 #define User_id_tag                              1
 #define User_long_name_tag                       2
 #define User_short_name_tag                      3
 #define User_macaddr_tag                         4
-#define ChatMessage_from_tag                     1
-#define ChatMessage_to_tag                       2
-#define ChatMessage_message_tag                  3
 #define DagrPacket_packet_num_tag                1
 #define DagrPacket_fragment_tag                  3
 #define DagrPacket_rx_time_tag                   4
@@ -77,8 +77,8 @@ X(a, STATIC,   ONEOF,    MESSAGE,  (variant,user,variant.user),   2)
 #define toDagr_variant_user_MSGTYPE User
 
 #define ChatMessage_FIELDLIST(X, a) \
-X(a, STATIC,   SINGULAR, INT32,    from,              1) \
-X(a, STATIC,   SINGULAR, INT32,    to,                2) \
+X(a, CALLBACK, SINGULAR, STRING,   from,              1) \
+X(a, CALLBACK, SINGULAR, STRING,   to,                2) \
 X(a, CALLBACK, SINGULAR, BYTES,    message,           3)
 #define ChatMessage_CALLBACK pb_default_field_callback
 #define ChatMessage_DEFAULT NULL
