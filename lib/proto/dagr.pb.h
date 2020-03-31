@@ -14,59 +14,106 @@ extern "C" {
 #endif
 
 /* Struct definitions */
-typedef PB_BYTES_ARRAY_T(230) ChatMessage_message_t;
+typedef struct _User {
+    pb_callback_t id;
+    pb_callback_t long_name;
+    pb_callback_t short_name;
+    pb_callback_t macaddr;
+} User;
+
 typedef struct _ChatMessage {
     int32_t from;
     int32_t to;
-    ChatMessage_message_t message;
+    pb_callback_t message;
 } ChatMessage;
 
+typedef PB_BYTES_ARRAY_T(255) DagrPacket_fragment_t;
 typedef struct _DagrPacket {
     int32_t packet_num;
-    pb_callback_t fragment;
+    DagrPacket_fragment_t fragment;
     uint32_t rx_time;
 } DagrPacket;
 
+typedef struct _toDagr {
+    pb_size_t which_variant;
+    union {
+        ChatMessage message;
+        User user;
+    } variant;
+} toDagr;
+
 
 /* Initializer values for message structs */
-#define ChatMessage_init_default                 {0, 0, {0, {0}}}
-#define DagrPacket_init_default                  {0, {{NULL}, NULL}, 0}
-#define ChatMessage_init_zero                    {0, 0, {0, {0}}}
-#define DagrPacket_init_zero                     {0, {{NULL}, NULL}, 0}
+#define toDagr_init_default                      {0, {ChatMessage_init_default}}
+#define ChatMessage_init_default                 {0, 0, {{NULL}, NULL}}
+#define DagrPacket_init_default                  {0, {0, {0}}, 0}
+#define User_init_default                        {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
+#define toDagr_init_zero                         {0, {ChatMessage_init_zero}}
+#define ChatMessage_init_zero                    {0, 0, {{NULL}, NULL}}
+#define DagrPacket_init_zero                     {0, {0, {0}}, 0}
+#define User_init_zero                           {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
 
 /* Field tags (for use in manual encoding/decoding) */
+#define User_id_tag                              1
+#define User_long_name_tag                       2
+#define User_short_name_tag                      3
+#define User_macaddr_tag                         4
 #define ChatMessage_from_tag                     1
 #define ChatMessage_to_tag                       2
 #define ChatMessage_message_tag                  3
 #define DagrPacket_packet_num_tag                1
 #define DagrPacket_fragment_tag                  3
 #define DagrPacket_rx_time_tag                   4
+#define toDagr_message_tag                       1
+#define toDagr_user_tag                          2
 
 /* Struct field encoding specification for nanopb */
+#define toDagr_FIELDLIST(X, a) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (variant,message,variant.message),   1) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (variant,user,variant.user),   2)
+#define toDagr_CALLBACK NULL
+#define toDagr_DEFAULT NULL
+#define toDagr_variant_message_MSGTYPE ChatMessage
+#define toDagr_variant_user_MSGTYPE User
+
 #define ChatMessage_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, INT32,    from,              1) \
 X(a, STATIC,   SINGULAR, INT32,    to,                2) \
-X(a, STATIC,   SINGULAR, BYTES,    message,           3)
-#define ChatMessage_CALLBACK NULL
+X(a, CALLBACK, SINGULAR, BYTES,    message,           3)
+#define ChatMessage_CALLBACK pb_default_field_callback
 #define ChatMessage_DEFAULT NULL
 
 #define DagrPacket_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, INT32,    packet_num,        1) \
-X(a, CALLBACK, SINGULAR, BYTES,    fragment,          3) \
+X(a, STATIC,   SINGULAR, BYTES,    fragment,          3) \
 X(a, STATIC,   SINGULAR, UINT32,   rx_time,           4)
-#define DagrPacket_CALLBACK pb_default_field_callback
+#define DagrPacket_CALLBACK NULL
 #define DagrPacket_DEFAULT NULL
 
+#define User_FIELDLIST(X, a) \
+X(a, CALLBACK, SINGULAR, STRING,   id,                1) \
+X(a, CALLBACK, SINGULAR, STRING,   long_name,         2) \
+X(a, CALLBACK, SINGULAR, STRING,   short_name,        3) \
+X(a, CALLBACK, SINGULAR, BYTES,    macaddr,           4)
+#define User_CALLBACK pb_default_field_callback
+#define User_DEFAULT NULL
+
+extern const pb_msgdesc_t toDagr_msg;
 extern const pb_msgdesc_t ChatMessage_msg;
 extern const pb_msgdesc_t DagrPacket_msg;
+extern const pb_msgdesc_t User_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
+#define toDagr_fields &toDagr_msg
 #define ChatMessage_fields &ChatMessage_msg
 #define DagrPacket_fields &DagrPacket_msg
+#define User_fields &User_msg
 
 /* Maximum encoded size of messages (where known) */
-#define ChatMessage_size                         255
-/* DagrPacket_size depends on runtime parameters */
+/* toDagr_size depends on runtime parameters */
+/* ChatMessage_size depends on runtime parameters */
+#define DagrPacket_size                          275
+/* User_size depends on runtime parameters */
 
 #ifdef __cplusplus
 } /* extern "C" */

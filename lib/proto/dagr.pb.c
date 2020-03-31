@@ -6,10 +6,16 @@
 #error Regenerate this file with the current version of nanopb generator.
 #endif
 
+PB_BIND(toDagr, toDagr, AUTO)
+
+
 PB_BIND(ChatMessage, ChatMessage, AUTO)
 
 
-PB_BIND(DagrPacket, DagrPacket, AUTO)
+PB_BIND(DagrPacket, DagrPacket, 2)
+
+
+PB_BIND(User, User, AUTO)
 
 
 

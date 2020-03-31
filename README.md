@@ -74,5 +74,5 @@ The minimum Viable Product/proof of concept will be having the DAGRs be able to 
 
 ```
 cd bin/nanopb/generator
-./protoc --nanopb_out=../../../lib/proto --proto_path=../../../proto ..\..\..\proto\dagr.proto
+./protoc '--nanopb_out=../../../lib/proto -f ../../../proto/dagr.options:../../../lib/proto' --proto_path=../../../proto ..\..\..\proto\dagr.proto
 ```

@@ -9,7 +9,7 @@
 int i = 0;
 bool _BLEClientConnected = false;
 
-static uint8_t message_buf[ChatMessage_size];
+static uint8_t message_buf[DagrPacket_size];
 
 class MyServerCallbacks : public BLEServerCallbacks
 {
