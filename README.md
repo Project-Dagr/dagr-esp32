@@ -73,6 +73,5 @@ The minimum Viable Product/proof of concept will be having the DAGRs be able to 
 ### Generating ProtoBuf
 
 ```
-cd bin/nanopb/generator
-./protoc '--nanopb_out=../../../lib/proto -f ../../../proto/dagr.options:../../../lib/proto' --proto_path=../../../proto ..\..\..\proto\dagr.proto
+python .\bin\nanopb\generator\nanopb_generator.py -t -f .\proto\dagr.options -D .\lib\ --strip-path .\proto\dagr.proto
 ```

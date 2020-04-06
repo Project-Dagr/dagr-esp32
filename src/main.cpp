@@ -19,7 +19,7 @@ LORA *lora = new LORA();
 void setup()
 {
     Serial.begin(115200);
-    Serial.write(getDeviceName());
+    Serial.println(getDeviceName());
 
     pinMode(LED_PIN, OUTPUT);
     
