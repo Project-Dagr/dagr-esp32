@@ -1,6 +1,7 @@
 #include "config.h"
 #include "BLE.h"
 #include "LORA.h"
+#include <ArduinoJson.h>
 
 const char *getDeviceName()
 {
@@ -22,23 +23,24 @@ void setup()
     Serial.println(getDeviceName());
 
     pinMode(LED_PIN, OUTPUT);
-    
+
     bluetooth->setup();
     lora->setup();
+
 }
 
 void loop()
 {
     // while (bluetooth->isDeviceConnected())
     // {
-        // if(bluetooth->isDeviceConnected()){
-        //     Serial.println("Device Connected");
-        // }else{
-        //     Serial.println("Device disconnected");
+    // if(bluetooth->isDeviceConnected()){
+    //     Serial.println("Device Connected");
+    // }else{
+    //     Serial.println("Device disconnected");
 
-        // }
-        bluetooth->loop();
-        lora->loop();
-        // delay(1000);
+    // }
+    bluetooth->loop();
+    lora->loop();
+    // delay(1000);
     // }
 }

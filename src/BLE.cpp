@@ -1,10 +1,7 @@
 #include "config.h"
 #include "BLE.h"
 #include "DagrQueues.h"
-#include "DagrPBConstants.h"
-#include <pb_common.h>
-#include <pb_decode.h>
-#include <pb_encode.h>
+#include <ArduinoJson.h>
 
 int i = 0;
 bool _BLEClientConnected = false;
@@ -39,12 +36,12 @@ class WriteCharacteristicCallbacks : public BLECharacteristicCallbacks
         std::string current = pCharacteristic->getValue();
         static ChatMessage cm; // this is a static scratch object, any data must be copied elsewhere before returning
 
-        if (pb_decode_from_bytes((const uint8_t *)current.c_str(), current.length(), ChatMessage_fields, &cm))
-        {
-            DagrQueues::Instance()->sendQueue.push(cm);
-            Serial.write("Added to Queue");
-            pCharacteristic->setValue("");
-        }
+        // if (pb_decode_from_bytes((const uint8_t *)current.c_str(), current.length(), ChatMessage_fields, &cm))
+        // {
+        //     DagrQueues::Instance()->sendQueue.push(cm);
+        //     Serial.write("Added to Queue");
+        //     pCharacteristic->setValue("");
+        // }
     }
 };
 
@@ -76,45 +73,26 @@ void BLE::setup()
 
 void BLE::loop()
 {
-    // std::ostringstream testString;
-    // testString << "Test " << i++;
-    // readCharacteristic->setValue(testString.str());
-    // readCharacteristic->indicate();
-    ChatMessage last_recieved = ChatMessage();
-    if (!DagrQueues::Instance()->sendQueue.empty())
-    {
-        last_recieved = DagrQueues::Instance()->sendQueue.back();
-    }
 
-    // uint8_t *current = writeCharacteristic->getData();
-    // pb_istream_t stream = pb_istream_from_buffer(current, sizeof(current));
-    // ChatMessage current_message;
-    // if (!pb_decode(&stream, ChatMessage_fields, &current_message))
+    // ChatMessage last_recieved = ChatMessage();
+    // if (!DagrQueues::Instance()->sendQueue.empty())
     // {
-    //     Serial.println("Decode Failed");
-
-    //     return;
+    //     last_recieved = DagrQueues::Instance()->sendQueue.back();
     // }
 
-    // if (!compare_chat_message(&current_message, &last_recieved))
+    
+
+    // if (!DagrQueues::Instance()->recieveQueue.empty())
     // {
+    //     Serial.println("Message Sending to BLE");
+    //     size_t numbytes = pb_encode_to_bytes(message_buf, sizeof(message_buf), ChatMessage_fields, &DagrQueues::Instance()->recieveQueue.front());
 
-    //     DagrQueues::Instance()->sendQueue.push(current_message);
-    //     Serial.write("Added to Queue");
-    //     writeCharacteristic->setValue("");
+    //     readCharacteristic->setValue(message_buf, numbytes);
+    //     readCharacteristic->indicate();
+    //     DagrQueues::Instance()->recieveQueue.pop();
     // }
-    if (!DagrQueues::Instance()->recieveQueue.empty())
-    {
-        Serial.println("Message Sending to BLE");
-        size_t numbytes = pb_encode_to_bytes(message_buf, sizeof(message_buf), ChatMessage_fields, &DagrQueues::Instance()->recieveQueue.front());
 
-        readCharacteristic->setValue(message_buf, numbytes);
-        readCharacteristic->indicate();
-        DagrQueues::Instance()->recieveQueue.pop();
-    }
 
-    // Serial.print("Send Queue: ");
-    // DagrQueues::printQueue(DagrQueues::Instance()->sendQueue);
 }
 
 bool BLE::isDeviceConnected()
