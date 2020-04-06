@@ -5,6 +5,7 @@
 
 int i = 0;
 bool _BLEClientConnected = false;
+const size_t capacity = JSON_OBJECT_SIZE(3) + 30;
 
 static uint8_t message_buf[DagrPacket_size];
 
@@ -34,8 +35,23 @@ class WriteCharacteristicCallbacks : public BLECharacteristicCallbacks
     {
         Serial.println("Got Write Request from Client");
         std::string current = pCharacteristic->getValue();
-        static ChatMessage cm; // this is a static scratch object, any data must be copied elsewhere before returning
+        DynamicJsonDocument message(256);
 
+        DeserializationError error = deserializeMsgPack(message, current);
+        if (error)
+        {
+            Serial.print("Deserialization failed with error: ");
+            Serial.println(error.c_str());
+            return;
+        }
+
+        int to = message["to"];
+        int from = message["from"];
+        int8_t payload = message["payload"];
+        Serial.println(to);
+        Serial.println(from);
+        Serial.println(payload);
+        // DagrQueues::Instance()->sendQueue.push(message);
         // if (pb_decode_from_bytes((const uint8_t *)current.c_str(), current.length(), ChatMessage_fields, &cm))
         // {
         //     DagrQueues::Instance()->sendQueue.push(cm);
@@ -80,8 +96,6 @@ void BLE::loop()
     //     last_recieved = DagrQueues::Instance()->sendQueue.back();
     // }
 
-    
-
     // if (!DagrQueues::Instance()->recieveQueue.empty())
     // {
     //     Serial.println("Message Sending to BLE");
@@ -91,8 +105,6 @@ void BLE::loop()
     //     readCharacteristic->indicate();
     //     DagrQueues::Instance()->recieveQueue.pop();
     // }
-
-
 }
 
 bool BLE::isDeviceConnected()

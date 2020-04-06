@@ -1,5 +1,6 @@
 #include "config.h"
 #include <queue>
+#include <ArduinoJson.h>
 
 class DagrQueues
 {
@@ -12,7 +13,7 @@ private:
 
 public:
     static DagrQueues *Instance();
-    std::queue<ChatMessage> sendQueue;
-    std::queue<ChatMessage> recieveQueue;
+    std::queue<std::string> sendQueue;
+    std::queue<std::string> recieveQueue;
     static void printQueue(std::queue<ChatMessage> q);
 };

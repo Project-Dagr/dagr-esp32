@@ -51,9 +51,11 @@ void LORA::loop()
   if (DagrQueues::Instance()->sendQueue.size() > 0)
   {
     // size_t numbytes = pb_encode_to_bytes(radiobuf, sizeof(radiobuf), ChatMessage_fields, &DagrQueues::Instance()->sendQueue.front());
+    std::string *radio_buffer = &DagrQueues::Instance()->sendQueue.front();
 
-    // int res = rf95.send(radiobuf, numbytes);
-    // assert(res);
+      
+    int res = rf95.send((const uint8_t *)radio_buffer, *radio_buffer.length());
+    assert(res);
     // DagrQueues::Instance()->sendQueue.pop();
   }
   if (rf95.available())
