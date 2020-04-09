@@ -35,9 +35,10 @@ class WriteCharacteristicCallbacks : public BLECharacteristicCallbacks
     {
         Serial.println("Got Write Request from Client");
         std::string current = pCharacteristic->getValue();
+        std::vector<uint8_t> v(current.begin(), current.end());
         DynamicJsonDocument message(256);
 
-        DeserializationError error = deserializeMsgPack(message, current);
+        DeserializationError error = deserializeMsgPack(message, v);
         if (error)
         {
             Serial.print("Deserialization failed with error: ");
@@ -47,11 +48,12 @@ class WriteCharacteristicCallbacks : public BLECharacteristicCallbacks
 
         int to = message["to"];
         int from = message["from"];
-        int8_t payload = message["payload"];
+        std::string payload = message["payload"];
         Serial.println(to);
         Serial.println(from);
-        Serial.println(payload);
-        // DagrQueues::Instance()->sendQueue.push(message);
+        Serial.println(payload.c_str());
+        // struct DagrQueues::uint8_buf data = {(uint8_t) *current.c_str(), current.length()};
+        DagrQueues::Instance()->sendQueue.push(v);
         // if (pb_decode_from_bytes((const uint8_t *)current.c_str(), current.length(), ChatMessage_fields, &cm))
         // {
         //     DagrQueues::Instance()->sendQueue.push(cm);
@@ -96,15 +98,37 @@ void BLE::loop()
     //     last_recieved = DagrQueues::Instance()->sendQueue.back();
     // }
 
-    // if (!DagrQueues::Instance()->recieveQueue.empty())
-    // {
-    //     Serial.println("Message Sending to BLE");
-    //     size_t numbytes = pb_encode_to_bytes(message_buf, sizeof(message_buf), ChatMessage_fields, &DagrQueues::Instance()->recieveQueue.front());
+    if (!DagrQueues::Instance()->recieveQueue.empty())
+    {
+        Serial.println("Message Sending to BLE");
+        DynamicJsonDocument message(256);
+        std::vector<uint8_t> current = DagrQueues::Instance()->recieveQueue.front();
 
-    //     readCharacteristic->setValue(message_buf, numbytes);
-    //     readCharacteristic->indicate();
-    //     DagrQueues::Instance()->recieveQueue.pop();
-    // }
+        DeserializationError error = deserializeMsgPack(message, current);
+        if (error)
+        {
+            Serial.print("Deserialization failed with error: ");
+            Serial.println(error.c_str());
+            return;
+        }
+
+        int to = message["to"];
+        int from = message["from"];
+        std::string payload = message["payload"];
+        // Serial.println(message.data());
+        Serial.println(to);
+        Serial.println(from);
+        Serial.println(payload.c_str());
+        for (int i = 0; i < current.size(); i++)
+            Serial.printf("%d, ", current.at(i));
+        Serial.println();
+        Serial.println(current.size());
+
+        readCharacteristic->setValue(current.data(), current.size());
+        // delay(500);
+        readCharacteristic->indicate();
+        DagrQueues::Instance()->recieveQueue.pop();
+    }
 }
 
 bool BLE::isDeviceConnected()
