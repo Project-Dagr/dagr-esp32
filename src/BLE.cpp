@@ -45,13 +45,17 @@ class WriteCharacteristicCallbacks : public BLECharacteristicCallbacks
             Serial.println(error.c_str());
             return;
         }
+        JsonObject test = message.to<JsonObject>();
 
-        int to = message["to"];
-        int from = message["from"];
+        std::string to = message["dest"];
+        const char *from = test["source"];
         std::string payload = message["payload"];
-        Serial.println(to);
+        Serial.println((const char)message["dest"]);
         Serial.println(from);
         Serial.println(payload.c_str());
+        std::string testing;
+        serializeJsonPretty(message, testing);
+        Serial.println(testing.c_str());
         // struct DagrQueues::uint8_buf data = {(uint8_t) *current.c_str(), current.length()};
         DagrQueues::Instance()->sendQueue.push(v);
         // if (pb_decode_from_bytes((const uint8_t *)current.c_str(), current.length(), ChatMessage_fields, &cm))
